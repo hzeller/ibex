@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-class ibex_icache_scoreboard
-  extends dv_base_scoreboard #(.CFG_T(ibex_icache_env_cfg), .COV_T(ibex_icache_env_cov));
+class ibex_icache_scoreboard extends dv_base_scoreboard#(
+    .CFG_T(ibex_icache_env_cfg),
+    .COV_T(ibex_icache_env_cov)
+);
 
   `uvm_component_utils(ibex_icache_scoreboard)
 
@@ -28,25 +30,25 @@ class ibex_icache_scoreboard
   // A queue of memory seeds, together with their associated mem_err_shift values. This gets a new
   // item every time we read a value from seed_fifo, and we store the associated mem_err_shift at
   // that point.
-  bit [63:0]   mem_states[$] = {};
+  bit [63:0]                        mem_states[$]      = {};
 
   // Tracks the next address we expect to see on a fetch. This gets reset to 'X, then is set to an
   // address after each branch transaction.
-  logic [31:0] next_addr;
+  logic [31:0]                      next_addr;
 
   // This counter is used for tracking invalidations. When we see an invalidation happen, we set
   // this to the index of the last seed in mem_states. When the next branch happens, we clear out
   // memory seeds up to that index.
-  int unsigned invalidate_seed = 0;
+  int unsigned                      invalidate_seed    = 0;
 
   // This counter points to the index (in mem_states) of the seed that was in use when the last
   // branch happened. If the cache is supposed to be disabled, a fetch is only allowed to return
   // data corresponding to that seed or later.
-  int unsigned last_branch_seed = 0;
+  int unsigned                      last_branch_seed   = 0;
 
   // A counter of outstanding transactions on the memory bus. The busy flag should never go to zero
   // when this is non-zero.
-  int unsigned mem_trans_count = 0;
+  int unsigned                      mem_trans_count    = 0;
 
   // Track the current enabled state. The enabled flag tracks whether the cache is currently
   // enabled. The no_cache flag is high if the cache has been disabled since before the last branch.
@@ -54,11 +56,11 @@ class ibex_icache_scoreboard
   //
   // TODO: Our enable tracking checks that we don't get cache hits when the cache is disabled. It
   //       doesn't yet check that the cache doesn't store fetches when disabled.
-  bit          enabled = 0;
-  bit          no_cache = 1'b1;
+  bit                               enabled            = 0;
+  bit                               no_cache           = 1'b1;
 
   // Track the current busy state
-  bit          busy = 0;
+  bit                               busy               = 0;
 
   // Track how well the cache is doing at caching stuff. The basic idea is that every fixed-size
   // window of N instruction fetches, we look to see how many memory requests we've done. We only
@@ -87,37 +89,37 @@ class ibex_icache_scoreboard
   // Note that we also reset the window if we see an error. If this happens, it's easy to see "read
   // amplification" where the cache reads a couple of fill buffers' worth of data and we only
   // actually get one instruction.
-  protected int unsigned max_window_width = 250;
-  protected int unsigned window_len       = 300;
+  protected int unsigned            max_window_width   = 250;
+  protected int unsigned            window_len         = 300;
 
   // The number of instructions seen in the current window.
-  protected int unsigned insns_in_window;
+  protected int unsigned            insns_in_window;
 
   // The number of memory reads seen in the current window
-  protected int unsigned reads_in_window;
+  protected int unsigned            reads_in_window;
 
   // Set if we've seen busy_o == 0 since the last invalidation (so we know that the cache isn't
   // currently invalidating)
-  protected bit not_invalidating;
+  protected bit                     not_invalidating;
 
   // Address range seen in the current window
-  protected bit [31:0] window_range_lo, window_range_hi;
+  protected bit [31:0]              window_range_lo,           window_range_hi;
 
   // Set by check_compatible_1/check_compatible_2 on a hit. Gives the "age" of the seed
   // corresponding to the last fetch. If the hit matched the most recent version of the seed, the
   // "age" is zero. For the next most recent version, it's one and so on.
-  protected int unsigned last_fetch_age;
+  protected int unsigned            last_fetch_age;
 
   // The number of fetches that might have had an old seed and the number that actually did.
-  int unsigned possible_old_count = 0;
-  int unsigned actual_old_count = 0;
+  int unsigned                      possible_old_count = 0;
+  int unsigned                      actual_old_count   = 0;
 
   `uvm_component_new
 
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
     core_fifo = new("core_fifo", this);
-    mem_fifo  = new("mem_fifo",  this);
+    mem_fifo = new("mem_fifo", this);
     seed_fifo = new("seed_fifo", this);
     mem_model = new("mem_model",
                     cfg.mem_agent_cfg.disable_pmp_errs,
@@ -143,11 +145,11 @@ class ibex_icache_scoreboard
       core_fifo.get(item);
       `uvm_info(`gfn, $sformatf("received core transaction:\n%0s", item.sprint()), UVM_HIGH)
       case (item.trans_type)
-        ICacheCoreBusTransTypeBranch:     process_branch(item);
-        ICacheCoreBusTransTypeFetch:      process_fetch(item);
+        ICacheCoreBusTransTypeBranch: process_branch(item);
+        ICacheCoreBusTransTypeFetch: process_fetch(item);
         ICacheCoreBusTransTypeInvalidate: process_invalidate(item);
-        ICacheCoreBusTransTypeEnable:     process_enable(item);
-        ICacheCoreBusTransTypeBusy:       process_busy(item);
+        ICacheCoreBusTransTypeEnable: process_enable(item);
+        ICacheCoreBusTransTypeBusy: process_busy(item);
         default: `uvm_fatal(`gfn, $sformatf("Bad transaction type %0d", item.trans_type))
       endcase
     end
@@ -158,12 +160,12 @@ class ibex_icache_scoreboard
 
     if (invalidate_seed > 0) begin
       // We've seen an invalidate signal recently. Clear out any expired seeds.
-      assert(invalidate_seed < mem_states.size);
+      assert (invalidate_seed < mem_states.size);
       mem_states = mem_states[invalidate_seed:$];
       invalidate_seed = 0;
     end
 
-    assert(mem_states.size > 0);
+    assert (mem_states.size > 0);
     last_branch_seed = mem_states.size - 1;
 
     if (!enabled) no_cache = 1'b1;
@@ -184,8 +186,8 @@ class ibex_icache_scoreboard
   endtask
 
   task process_invalidate(ibex_icache_core_bus_item item);
-    assert(mem_states.size > 0);
-    invalidate_seed = mem_states.size - 1;
+    assert (mem_states.size > 0);
+    invalidate_seed  = mem_states.size - 1;
 
     not_invalidating = 1'b0;
   endtask
@@ -265,7 +267,7 @@ class ibex_icache_scoreboard
   function void check_phase(uvm_phase phase);
     super.check_phase(phase);
     `DV_EOT_PRINT_TLM_FIFO_CONTENTS(ibex_icache_core_bus_item, core_fifo)
-    `DV_EOT_PRINT_TLM_FIFO_CONTENTS(ibex_icache_mem_bus_item,  mem_fifo)
+    `DV_EOT_PRINT_TLM_FIFO_CONTENTS(ibex_icache_mem_bus_item, mem_fifo)
   endfunction
 
   // Check whether observed fetched instruction data matches the given single memory fetch.
@@ -289,9 +291,7 @@ class ibex_icache_scoreboard
       if (!seen_err) begin
         // The (lower) memory fetch should have failed, but we haven't got an error flag.
         if (chatty) begin
-          `uvm_info(`gfn,
-                    $sformatf("Not seed 0x%08h: expected seen_err but saw 0.", seed),
-                    UVM_LOW)
+          `uvm_info(`gfn, $sformatf("Not seed 0x%08h: expected seen_err but saw 0.", seed), UVM_LOW)
         end
         return 0;
       end
@@ -305,9 +305,7 @@ class ibex_icache_scoreboard
 
     if (seen_err) begin
       if (chatty) begin
-        `uvm_info(`gfn,
-                  $sformatf("Not seed 0x%08h: got unexpected error flag.", seed),
-                  UVM_LOW)
+        `uvm_info(`gfn, $sformatf("Not seed 0x%08h: got unexpected error flag.", seed), UVM_LOW)
       end
       return 0;
     end
@@ -358,7 +356,7 @@ class ibex_icache_scoreboard
                                                  bit          chatty);
 
     // We should only be called when the seen instruction data for the lower word is uncompressed
-    assert(seen_insn_data[1:0] == 2'b11);
+    assert (seen_insn_data[1:0] == 2'b11);
 
     if (exp_err_lo) begin
       if (chatty) begin
@@ -416,16 +414,16 @@ class ibex_icache_scoreboard
                                                  logic        seen_err,
                                                  bit [63:0]   mem_state,
                                                  bit          chatty);
-    int                bus_shift;
-    logic [31:0]       addr_lo;
-    int unsigned       lo_bits_to_drop;
+    int                         bus_shift;
+    logic        [        31:0] addr_lo;
+    int unsigned                lo_bits_to_drop;
 
-    logic              retval;
+    logic                       retval;
 
-    bit [BusWidth-1:0] rdata;
+    bit          [BusWidth-1:0] rdata;
 
-    bit [31:0]         seed;
-    int unsigned       mem_err_shift;      
+    bit          [        31:0] seed;
+    int unsigned                mem_err_shift;
 
     bus_shift = $clog2(BusWidth / 8);
     addr_lo = (address >> bus_shift) << bus_shift;
@@ -457,21 +455,21 @@ class ibex_icache_scoreboard
                                                  bit [63:0]   mem_state_lo,
                                                  bit [63:0]   mem_state_hi,
                                                  bit          chatty);
-    int          bus_shift;
+    int bus_shift;
     logic [31:0] addr_lo, addr_hi;
 
-    bit                exp_err_lo, exp_err_hi;
-    bit [31:0]         exp_data;
+    bit exp_err_lo, exp_err_hi;
+    bit [        31:0] exp_data;
     bit [BusWidth-1:0] rdata;
 
     int unsigned lo_bits_to_take, lo_bits_to_drop;
 
-    bit [31:0]         seed_lo, seed_hi;
-    int unsigned       mem_err_shift_lo, mem_err_shift_hi;
+    bit [31:0] seed_lo, seed_hi;
+    int unsigned mem_err_shift_lo, mem_err_shift_hi;
 
     bus_shift = $clog2(BusWidth / 8);
-    addr_lo = (address >> bus_shift) << bus_shift;
-    addr_hi = addr_lo + (32'd1 << bus_shift);
+    addr_lo   = (address >> bus_shift) << bus_shift;
+    addr_hi   = addr_lo + (32'd1 << bus_shift);
 
     // This is only supposed to be used for misaligned reads
     assert (addr_lo < address);
@@ -479,22 +477,22 @@ class ibex_icache_scoreboard
     // How many bits do we get from each read? (Note that for half-word aligned reads on a 32-bit
     // bus, both of these numbers will be 16, but this code should be correct with other values of
     // BusWidth).
-    lo_bits_to_take = 8 * (address - addr_lo);
-    lo_bits_to_drop = BusWidth - lo_bits_to_take;
+    lo_bits_to_take             = 8 * (address - addr_lo);
+    lo_bits_to_drop             = BusWidth - lo_bits_to_take;
 
     {seed_lo, mem_err_shift_lo} = mem_state_lo;
     {seed_hi, mem_err_shift_hi} = mem_state_hi;
 
     // Do the first read (from the low address) and shift right to drop the bits that we don't need.
-    exp_err_lo = mem_model.is_either_error(seed_lo, addr_lo, mem_err_shift_lo);
-    rdata      = mem_model.read_data(seed_lo, addr_lo) >> lo_bits_to_drop;
-    exp_data   = rdata[31:0];
+    exp_err_lo                  = mem_model.is_either_error(seed_lo, addr_lo, mem_err_shift_lo);
+    rdata                       = mem_model.read_data(seed_lo, addr_lo) >> lo_bits_to_drop;
+    exp_data                    = rdata[31:0];
 
     // Now do the second read (from the upper address). Shift the result up by lo_bits_to_take,
     // which will discard some top bits. Then extract 32 bits and OR with what we have so far.
-    exp_err_hi = mem_model.is_either_error(seed_hi, addr_hi, mem_err_shift_hi);
-    rdata      = mem_model.read_data(seed_hi, addr_hi) << lo_bits_to_take;
-    exp_data   = exp_data | rdata[31:0];
+    exp_err_hi                  = mem_model.is_either_error(seed_hi, addr_hi, mem_err_shift_hi);
+    rdata                       = mem_model.read_data(seed_hi, addr_hi) << lo_bits_to_take;
+    exp_data                    = exp_data | rdata[31:0];
 
     return is_fetch_compatible_2(seen_insn_data, seen_err_plus2,
                                  exp_err_lo, exp_err_hi, exp_data,
@@ -556,7 +554,7 @@ class ibex_icache_scoreboard
     logic uncompressed;
     int unsigned min_idx;
 
-    bit [31:0]   last_seed;
+    bit [31:0] last_seed;
     int unsigned last_mem_err_shift;
 
     misaligned       = (item.address & 3) != 0;
@@ -665,7 +663,7 @@ class ibex_icache_scoreboard
 
   // Register an instruction fetch with the caching tracking window
   function automatic void window_take_insn(bit [31:0] addr, bit err);
-    bit [32:0]   window_width;
+    bit [32:0] window_width;
     int unsigned fetch_ratio_pc;
 
     // Ignore instructions and reset the window if this check is disabled in the configuration.

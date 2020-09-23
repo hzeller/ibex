@@ -12,13 +12,9 @@ package env_dpi;
                             input bit [31:0] MHPMCounterNum,
                             input bit [31:0] MHPMCounterWidth);
 
-  import "DPI-C"
-  function void env_final();
+  import "DPI-C" function void env_final();
 
-  import "DPI-C"
-  function void env_tick(
-    output bit stop_req,
-    output bit test_passed);
+  import "DPI-C" function void env_tick(output bit stop_req, output bit test_passed);
 
 endpackage
 

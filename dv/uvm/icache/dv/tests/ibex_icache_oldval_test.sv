@@ -21,7 +21,7 @@ class ibex_icache_oldval_test extends ibex_icache_base_test;
 
     super.check_phase(phase);
 
-    actual = env.scoreboard.actual_old_count;
+    actual   = env.scoreboard.actual_old_count;
     possible = env.scoreboard.possible_old_count;
 
     `DV_CHECK(possible >= 1000,

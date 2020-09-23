@@ -6,14 +6,14 @@
 class dv_base_reg extends uvm_reg;
   // external reg doesn't have storage in reg module, which may connect to some combinational logic
   // hence, backdoor write isn't available
-  local bit is_ext_reg;
+  local bit            is_ext_reg;
 
   local dv_base_reg    locked_regs[$];
   local uvm_reg_data_t staged_shadow_val;
   local bit            is_shadowed;
-  local bit            shadow_wr_staged; // stage the first shadow reg write
+  local bit            shadow_wr_staged;  // stage the first shadow reg write
   local bit            shadow_update_err;
-  local bit            en_shadow_wr = 1;
+  local bit            en_shadow_wr         = 1;
 
   // atomic_shadow_wr: semaphore to guarantee atomicity of the two writes for shadowed registers.
   // In case a parallel thread writing a different value to the same reg causing an update_err
@@ -23,9 +23,7 @@ class dv_base_reg extends uvm_reg;
   // through the 1st/2nd (or both) writes
   semaphore            atomic_en_shadow_wr;
 
-  function new(string       name = "",
-               int unsigned n_bits,
-               int          has_coverage);
+  function new(string name = "", int unsigned n_bits, int has_coverage);
     super.new(name, n_bits, has_coverage);
     atomic_en_shadow_wr = new(1);
     atomic_shadow_wr    = new(1);
@@ -65,7 +63,7 @@ class dv_base_reg extends uvm_reg;
   endfunction
 
   function bit is_staged();
-     return shadow_wr_staged;
+    return shadow_wr_staged;
   endfunction
 
   // if enable register is set to 1, the locked registers will be set to RO access
@@ -126,10 +124,11 @@ class dv_base_reg extends uvm_reg;
     if (is_shadowed) begin
       // first write
       if (!shadow_wr_staged) begin
-        shadow_wr_staged = 1;
+        shadow_wr_staged  = 1;
         staged_shadow_val = rw.value[0];
         return;
-      end begin
+      end
+      begin
         // second write
         shadow_wr_staged = 0;
         if (staged_shadow_val != rw.value[0]) begin
@@ -145,8 +144,8 @@ class dv_base_reg extends uvm_reg;
         // rw.value is a dynamic array
         "W1C": if (rw.value[0][0] == 1'b1) set_locked_regs_access("RO");
         "W0C": if (rw.value[0][0] == 1'b0) set_locked_regs_access("RO");
-        "RO": ; // if RO, it's updated by design, need to predict in scb
-        default:`uvm_fatal(`gfn, $sformatf("enable register invalid access %s", field_access))
+        "RO": ;  // if RO, it's updated by design, need to predict in scb
+        default: `uvm_fatal(`gfn, $sformatf("enable register invalid access %s", field_access))
       endcase
     end
   endtask

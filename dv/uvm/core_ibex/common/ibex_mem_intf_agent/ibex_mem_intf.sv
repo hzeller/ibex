@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-interface ibex_mem_intf#(
+interface ibex_mem_intf #(
   parameter int ADDR_WIDTH = 32,
   parameter int DATA_WIDTH = 32
 ) (
@@ -12,38 +12,38 @@ interface ibex_mem_intf#(
   logic                    reset;
   logic                    request;
   logic                    grant;
-  logic [ADDR_WIDTH-1:0]   addr;
+  logic [  ADDR_WIDTH-1:0] addr;
   logic                    we;
   logic [DATA_WIDTH/8-1:0] be;
   logic                    rvalid;
-  logic [DATA_WIDTH-1:0]   wdata;
-  logic [DATA_WIDTH-1:0]   rdata;
+  logic [  DATA_WIDTH-1:0] wdata;
+  logic [  DATA_WIDTH-1:0] rdata;
   logic                    error;
 
   clocking request_driver_cb @(posedge clk);
-    input   reset;
-    output  request;
-    input   grant;
-    output  addr;
-    output  we;
-    output  be;
-    input   rvalid;
-    output  wdata;
-    input   rdata;
-    input   error;
+    input reset;
+    output request;
+    input grant;
+    output addr;
+    output we;
+    output be;
+    input rvalid;
+    output wdata;
+    input rdata;
+    input error;
   endclocking
 
   clocking response_driver_cb @(posedge clk);
-    input   reset;
-    input   request;
-    output  grant;
-    input   addr;
-    input   we;
-    input   be;
-    output  rvalid;
-    input   wdata;
-    output  rdata;
-    output  error;
+    input reset;
+    input request;
+    output grant;
+    input addr;
+    input we;
+    input be;
+    output rvalid;
+    input wdata;
+    output rdata;
+    output error;
   endclocking
 
   clocking monitor_cb @(posedge clk);

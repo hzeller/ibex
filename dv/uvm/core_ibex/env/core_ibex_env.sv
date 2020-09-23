@@ -7,11 +7,11 @@
 // ---------------------------------------------
 class core_ibex_env extends uvm_env;
 
-  ibex_mem_intf_response_agent   data_if_response_agent;
-  ibex_mem_intf_response_agent   instr_if_response_agent;
+  ibex_mem_intf_response_agent data_if_response_agent;
+  ibex_mem_intf_response_agent instr_if_response_agent;
   irq_request_agent            irq_agent;
-  core_ibex_vseqr             vseqr;
-  core_ibex_env_cfg           cfg;
+  core_ibex_vseqr              vseqr;
+  core_ibex_env_cfg            cfg;
 
   `uvm_component_utils(core_ibex_env)
   `uvm_component_new

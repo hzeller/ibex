@@ -6,27 +6,27 @@ class irq_monitor extends uvm_monitor;
 
   protected virtual irq_if vif;
 
-  uvm_analysis_port#(irq_seq_item) irq_port;
+  uvm_analysis_port #(irq_seq_item) irq_port;
 
   `uvm_component_utils(irq_monitor)
 
-  function new(string name, uvm_component parent=null);
+  function new(string name, uvm_component parent = null);
     super.new(name, parent);
     irq_port = new("irq_port", this);
   endfunction : new
 
   function void build_phase(uvm_phase phase);
     if (!uvm_config_db#(virtual irq_if)::get(this, "", "vif", vif)) begin
-      `uvm_fatal("NOVIF",{"virtual interface must be set for: ",get_full_name(),".vif"});
+      `uvm_fatal("NOVIF", {"virtual interface must be set for: ", get_full_name(), ".vif"});
     end
-  endfunction: build_phase
+  endfunction : build_phase
 
   virtual task run_phase(uvm_phase phase);
     forever begin
-      wait (vif.monitor_cb.reset === 1'b0);
+      wait(vif.monitor_cb.reset === 1'b0);
       fork : monitor_irq
         collect_irq();
-        wait (vif.monitor_cb.reset === 1'b1);
+        wait(vif.monitor_cb.reset === 1'b1);
       join_any
       // Will only reach here on mid-test reset
       disable monitor_irq;
@@ -43,8 +43,8 @@ class irq_monitor extends uvm_monitor;
   // item every time the interrupt lines change.
   virtual protected task collect_irq();
     irq_seq_item irq;
-    bit[DATA_WIDTH-1:0] stored_irq_val = '0;
-    bit[DATA_WIDTH-1:0] current_irq = '0;
+    bit [DATA_WIDTH-1:0] stored_irq_val = '0;
+    bit [DATA_WIDTH-1:0] current_irq = '0;
     forever begin
       current_irq = {vif.monitor_cb.irq_nm,
                      vif.monitor_cb.irq_fast,
