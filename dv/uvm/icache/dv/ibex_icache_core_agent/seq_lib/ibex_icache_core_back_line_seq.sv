@@ -7,7 +7,7 @@ class ibex_icache_core_back_line_seq extends ibex_icache_core_base_seq;
   `uvm_object_utils(ibex_icache_core_back_line_seq)
   `uvm_object_new
 
-  bit        req_phase = 0;
+  bit        req_phase    = 0;
   bit [31:0] last_branch;
 
   protected virtual task run_req(ibex_icache_core_req_item req, ibex_icache_core_rsp_item rsp);
@@ -48,7 +48,7 @@ class ibex_icache_core_back_line_seq extends ibex_icache_core_base_seq;
     get_response(rsp);
 
     last_branch = req.branch_addr;
-    req_phase = !req_phase;
+    req_phase   = !req_phase;
   endtask
 
 endclass : ibex_icache_core_back_line_seq

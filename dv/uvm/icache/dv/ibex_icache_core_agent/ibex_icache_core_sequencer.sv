@@ -2,17 +2,18 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-class ibex_icache_core_sequencer
-  extends dv_base_sequencer #(.ITEM_T     (ibex_icache_core_req_item),
-                              .RSP_ITEM_T (ibex_icache_core_rsp_item),
-                              .CFG_T      (ibex_icache_core_agent_cfg));
+class ibex_icache_core_sequencer extends dv_base_sequencer#(
+    .ITEM_T    (ibex_icache_core_req_item),
+    .RSP_ITEM_T(ibex_icache_core_rsp_item),
+    .CFG_T     (ibex_icache_core_agent_cfg)
+);
   `uvm_component_utils(ibex_icache_core_sequencer)
   `uvm_component_new
 
   // An objection used for heartbeat tracking. Set with register_hb.
   uvm_callbacks_objection hb_objection;
 
-  function void register_hb (uvm_callbacks_objection obj);
+  function void register_hb(uvm_callbacks_objection obj);
     hb_objection = obj;
   endfunction
 

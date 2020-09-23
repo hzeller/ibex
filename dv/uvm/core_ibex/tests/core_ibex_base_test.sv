@@ -13,21 +13,21 @@ class core_ibex_base_test extends uvm_test;
   mem_model_pkg::mem_model                        mem;
   core_ibex_vseq                                  vseq;
   bit                                             enable_irq_seq;
-  int unsigned                                    timeout_in_cycles = 100000000;
-  int unsigned                                    max_quit_count  = 1;
+  int unsigned                                    timeout_in_cycles    = 100000000;
+  int unsigned                                    max_quit_count       = 1;
   // If no signature_addr handshake functionality is desired between the testbench and the generated
   // code, the test will wait for the specifield number of cycles before starting stimulus
   // sequences (irq and debug)
-  int unsigned                                    stimulus_delay = 800;
-  bit[ibex_mem_intf_agent_pkg::DATA_WIDTH-1:0]    signature_data_q[$];
-  bit[ibex_mem_intf_agent_pkg::DATA_WIDTH-1:0]    signature_data;
+  int unsigned                                    stimulus_delay       = 800;
+  bit [ibex_mem_intf_agent_pkg::DATA_WIDTH-1:0]   signature_data_q[$];
+  bit [ibex_mem_intf_agent_pkg::DATA_WIDTH-1:0]   signature_data;
   uvm_tlm_analysis_fifo #(ibex_mem_intf_seq_item) item_collected_port;
   uvm_tlm_analysis_fifo #(irq_seq_item)           irq_collected_port;
   uvm_phase                                       run;
 
   `uvm_component_utils(core_ibex_base_test)
 
-  function new(string name="", uvm_component parent=null);
+  function new(string name = "", uvm_component parent = null);
     core_ibex_report_server ibex_report_server;
     super.new(name, parent);
     ibex_report_server = new();
@@ -101,18 +101,18 @@ class core_ibex_base_test extends uvm_test;
   endtask
 
   function void load_binary_to_mem();
-    string      bin;
-    bit [7:0]   r8;
-    bit [31:0]  addr = `BOOT_ADDR;
-    int         f_bin;
+    string        bin;
+    bit    [ 7:0] r8;
+    bit    [31:0] addr = `BOOT_ADDR;
+    int           f_bin;
     void'($value$plusargs("bin=%0s", bin));
-    if (bin == "")
-      `uvm_fatal(get_full_name(), "Please specify test binary by +bin=binary_name")
+    if (bin == "") `uvm_fatal(get_full_name(), "Please specify test binary by +bin=binary_name")
     `uvm_info(get_full_name(), $sformatf("Running test : %0s", bin), UVM_LOW)
-    f_bin = $fopen(bin,"rb");
-    if (!f_bin)
-      `uvm_fatal(get_full_name(), $sformatf("Cannot open file %0s", bin))
-    while ($fread(r8,f_bin)) begin
+    f_bin = $fopen(bin, "rb");
+    if (!f_bin) `uvm_fatal(get_full_name(), $sformatf("Cannot open file %0s", bin))
+    while ($fread(
+        r8, f_bin
+    )) begin
       `uvm_info(`gfn, $sformatf("Init mem [0x%h] = 0x%0h", addr, r8), UVM_FULL)
       mem.write(addr, r8);
       addr++;
@@ -122,7 +122,7 @@ class core_ibex_base_test extends uvm_test;
   virtual task wait_for_test_done();
     fork
       begin
-        wait (dut_vif.dut_cb.ecall === 1'b1);
+        wait(dut_vif.dut_cb.ecall === 1'b1);
         vseq.stop();
         `uvm_info(`gfn, "ECALL instruction is detected, test done", UVM_LOW)
         // De-assert fetch enable to finish the test
@@ -161,7 +161,7 @@ class core_ibex_base_test extends uvm_test;
           end
           // The next 32 writes to the address are guaranteed to be a dump of all GPRs
           WRITE_GPR: begin
-            for(int i = 0; i < 32; i++) begin
+            for (int i = 0; i < 32; i++) begin
               do begin
                 item_collected_port.get(mem_txn);
               end while(!(mem_txn.addr == ref_addr && mem_txn.read_write == WRITE));

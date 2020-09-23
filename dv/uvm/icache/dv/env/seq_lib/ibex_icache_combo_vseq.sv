@@ -4,17 +4,16 @@
 
 // A "combination vseq", which runs proper virtual sequences in a random order.
 
-class ibex_icache_combo_vseq
-  extends dv_base_vseq #(
-    .CFG_T               (ibex_icache_env_cfg),
-    .COV_T               (ibex_icache_env_cov),
-    .VIRTUAL_SEQUENCER_T (ibex_icache_virtual_sequencer)
-  );
+class ibex_icache_combo_vseq extends dv_base_vseq#(
+    .CFG_T              (ibex_icache_env_cfg),
+    .COV_T              (ibex_icache_env_cov),
+    .VIRTUAL_SEQUENCER_T(ibex_icache_virtual_sequencer)
+);
   `uvm_object_utils(ibex_icache_combo_vseq)
   `uvm_object_new
 
   // The number of transactions across the combined sequences
-  constraint num_trans_c { num_trans inside {[800:1000]}; }
+  constraint num_trans_c {num_trans inside {[800 : 1000]};}
 
   // The virtual sequences from which we'll build the test. Note that this doesn't contain
   // "ibex_icache_oldval_vseq": that sequence is for a specific test, which has a slightly different
@@ -49,7 +48,7 @@ class ibex_icache_combo_vseq
       int unsigned trans_now;
       bit          should_reset;
 
-      seq_idx = $urandom_range(0, seq_names.size - 1);
+      seq_idx   = $urandom_range(0, seq_names.size - 1);
 
       // Pick the number of transactions to run. We don't want too many, because the whole point is
       // that we're interested in the edges between sequences. Note that we don't bother to ensure
@@ -92,7 +91,7 @@ class ibex_icache_combo_vseq
 
       prev_seq = child_seq;
       trans_so_far += trans_now;
-      seqs_so_far  += 1;
+      seqs_so_far += 1;
     end
   endtask : body
 
@@ -107,8 +106,8 @@ class ibex_icache_combo_vseq
     end else begin
       `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(cycles_till_reset,
                                          cycles_till_reset dist {
-                                           [100:500]  :/ 1,
-                                           [501:1000] :/ 4
+                                           [100 : 500] :/ 1,
+                                           [501 : 1000] :/ 4
                                          };)
       fork
         child_seq.start(p_sequencer, this);
